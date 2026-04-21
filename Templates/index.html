@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Report Pro — Generador IA de Informes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --ink:    #0d0f1a;
+      --paper:  #f7f6f1;
+      --cream:  #ede9df;
+      --gold:   #c9a84c;
+      --gold2:  #e8c96a;
+      --navy:   #1a237e;
+      --navy2:  #283593;
+      --indigo: #3949ab;
+      --mist:   #e8eaf6;
+      --red:    #c62828;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ──────── GRAIN OVERLAY ──────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: .5;
+    }
+
+    main { position: relative; z-index: 1; }
+
+    /* ──────── HERO HEADER ──────── */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 50%, #1a237e 100%);
+      padding: 3rem 2rem 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0; height: 60px;
+      background: var(--paper);
+      clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: rgba(201,168,76,.15);
+      border: 1px solid rgba(201,168,76,.4);
+      color: var(--gold2);
+      font-size: .72rem; font-weight: 600; letter-spacing: .12em;
+      padding: .3rem .9rem; border-radius: 100px;
+      text-transform: uppercase; margin-bottom: 1.2rem;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+    }
+    .hero h1 span { color: var(--gold2); }
+    .hero p {
+      color: #c5cae9;
+      font-size: 1rem; font-weight: 300;
+      margin-top: .7rem; max-width: 540px; margin-inline: auto;
+    }
+
+    /* ──────── CARD ──────── */
+    .card {
+      background: #fff;
+      border: 1px solid #e0ddd4;
+      border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(13,15,26,.06);
+      padding: 1.8rem;
+    }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1.1rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .card-title::before {
+      content: ''; display: block;
+      width: 4px; height: 1.1em;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    /* ──────── TABS (modo) ──────── */
+    .tabs { display: flex; gap: .4rem; background: var(--mist); border-radius: 10px; padding: .3rem; }
+    .tab-btn {
+      flex: 1; padding: .5rem .6rem;
+      font-size: .82rem; font-weight: 500;
+      border: none; border-radius: 7px;
+      cursor: pointer;
+      background: transparent; color: var(--indigo);
+      transition: all .2s;
+    }
+    .tab-btn.active {
+      background: var(--navy);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(26,35,126,.25);
+    }
+    .tab-btn:hover:not(.active) { background: rgba(57,73,171,.1); }
+
+    /* ──────── INPUTS ──────── */
+    label {
+      display: block;
+      font-size: .8rem; font-weight: 600;
+      color: #5c5b52;
+      letter-spacing: .04em; text-transform: uppercase;
+      margin-bottom: .4rem;
+    }
+    input[type=text], input[type=date], select, textarea {
+      width: 100%;
+      padding: .65rem .9rem;
+      border: 1.5px solid #ddd9cf;
+      border-radius: 9px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .92rem;
+      color: var(--ink);
+      background: var(--paper);
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(57,73,171,.12);
+      background: #fff;
+    }
+    textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+    select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233949ab' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+
+    /* ──────── CHIP SELECT (normas) ──────── */
+    .chip-group { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .chip {
+      padding: .32rem .85rem;
+      border: 1.5px solid #ddd9cf;
+      border-radius: 100px;
+      font-size: .78rem; font-weight: 600;
+      cursor: pointer; color: #6b6a61;
+      background: var(--paper);
+      transition: all .2s;
+      user-select: none;
+    }
+    .chip.selected {
+      background: var(--navy); color: #fff;
+      border-color: var(--navy);
+      box-shadow: 0 2px 8px rgba(26,35,126,.2);
+    }
+    .chip:hover:not(.selected) { border-color: var(--indigo); color: var(--indigo); }
+
+    /* ──────── TIPO INFORME CARDS ──────── */
+    .tipo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+    .tipo-card {
+      border: 1.5px solid #ddd9cf;
+      border-radius: 10px; padding: .75rem 1rem;
+      cursor: pointer; transition: all .2s;
+      background: var(--paper);
+    }
+    .tipo-card.selected {
+      border-color: var(--navy); background: var(--mist);
+      box-shadow: 0 0 0 3px rgba(26,35,126,.1);
+    }
+    .tipo-card:hover:not(.selected) { border-color: var(--indigo); }
+    .tipo-card .tipo-icon { font-size: 1.4rem; margin-bottom: .3rem; }
+    .tipo-card .tipo-name { font-size: .82rem; font-weight: 600; color: var(--navy); }
+    .tipo-card .tipo-desc { font-size: .72rem; color: #8a8979; margin-top: .1rem; }
+
+    /* ──────── AUTORES ──────── */
+    .autor-row {
+      display: grid; grid-template-columns: 1fr 1fr auto;
+      gap: .6rem; align-items: end;
+      padding: .7rem; background: var(--cream);
+      border-radius: 9px; margin-bottom: .5rem;
+    }
+    .btn-remove {
+      width: 34px; height: 34px;
+      border-radius: 7px; border: none;
+      background: #fff; color: #c62828;
+      font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .btn-remove:hover { background: #ffebee; }
+    .btn-add {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .45rem 1rem;
+      border: 1.5px dashed var(--indigo); border-radius: 8px;
+      background: transparent; color: var(--indigo);
+      font-size: .82rem; font-weight: 600; cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-add:hover { background: var(--mist); }
+
+    /* ──────── REFERENCIAS ──────── */
+    .refs-tabs { display: flex; gap: .35rem; margin-bottom: .9rem; }
+    .ref-tab {
+      flex: 1; padding: .45rem;
+      font-size: .78rem; font-weight: 600;
+      border: 1.5px solid #ddd9cf; border-radius: 8px;
+      cursor: pointer; background: var(--paper); color: #6b6a61;
+      transition: all .2s; text-align: center;
+    }
+    .ref-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+    /* ──────── CTA BUTTON ──────── */
+    .btn-generate {
+      width: 100%; padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--indigo) 100%);
+      color: #fff; border: none; border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem; font-weight: 600;
+      cursor: pointer; position: relative; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(26,35,126,.35);
+      transition: transform .15s, box-shadow .15s;
+      display: flex; align-items: center; justify-content: center; gap: .6rem;
+    }
+    .btn-generate::before {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+      transition: left .5s;
+    }
+    .btn-generate:hover::before { left: 100%; }
+    .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(26,35,126,.4); }
+    .btn-generate:active { transform: translateY(0); }
+    .btn-generate:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* ──────── PROGRESS / LOADER ──────── */
+    #progressSection {
+      display: none;
+      background: #fff;
+      border: 1px solid #e0ddd4;
+      border-radius: 16px;
+      padding: 2rem 1.8rem;
+      text-align: center;
+    }
+    .spinner {
+      width: 52px; height: 52px;
+      border: 4px solid var(--mist);
+      border-top-color: var(--navy);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.2rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-bar-wrap {
+      background: var(--mist); border-radius: 100px;
+      height: 6px; overflow: hidden; margin: 1rem 0 .6rem;
+    }
+    .progress-bar {
+      height: 100%; border-radius: 100px;
+      background: linear-gradient(90deg, var(--navy), var(--gold));
+      width: 0%;
+      transition: width .5s ease;
+    }
+    .step-list { list-style: none; text-align: left; margin-top: 1.2rem; }
+    .step-list li {
+      font-size: .85rem; color: #8a8979;
+      padding: .3rem 0;
+      display: flex; align-items: center; gap: .5rem;
+      transition: color .3s;
+    }
+    .step-list li.done { color: var(--navy); font-weight: 600; }
+    .step-list li .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ddd9cf; flex-shrink: 0;
+      transition: background .3s;
+    }
+    .step-list li.done .dot { background: var(--gold); }
+    .step-list li.active .dot {
+      background: var(--navy);
+      box-shadow: 0 0 0 3px rgba(26,35,126,.2);
+      animation: pulse-dot .8s ease-in-out infinite alternate;
+    }
+    .step-list li.active { color: var(--navy); }
+    @keyframes pulse-dot {
+      from { transform: scale(1); }
+      to   { transform: scale(1.4); }
+    }
+
+    /* ──────── TOAST / ALERT ──────── */
+    #toast {
+      display: none;
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+      padding: .85rem 1.3rem;
+      background: #fff;
+      border: 1.5px solid #ddd9cf;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(13,15,26,.15);
+      font-size: .88rem; font-weight: 500;
+      max-width: 340px;
+      display: none;
+      align-items: center; gap: .6rem;
+    }
+    #toast.error { border-color: #ef9a9a; background: #ffebee; color: #c62828; }
+    #toast.success { border-color: #a5d6a7; background: #e8f5e9; color: #2e7d32; }
+
+    /* ──────── PREVIEW MODAL ──────── */
+    #previewModal {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(13,15,26,.6); backdrop-filter: blur(4px);
+      align-items: flex-start; justify-content: center;
+      padding: 2rem 1rem; overflow-y: auto;
+    }
+    .preview-box {
+      background: #fff; border-radius: 16px; width: 100%; max-width: 760px;
+      box-shadow: 0 20px 60px rgba(13,15,26,.3);
+      overflow: hidden;
+    }
+    .preview-header {
+      background: var(--navy); color: #fff;
+      padding: 1.2rem 1.6rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .preview-header h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; }
+    .preview-close {
+      background: rgba(255,255,255,.15); border: none; color: #fff;
+      width: 32px; height: 32px; border-radius: 8px;
+      font-size: 1.2rem; cursor: pointer; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview-body {
+      padding: 1.6rem; max-height: 70vh; overflow-y: auto;
+      font-size: .88rem; line-height: 1.8; color: #3c3b35;
+      white-space: pre-wrap; font-family: 'DM Mono', monospace;
+    }
+    .preview-footer {
+      padding: 1rem 1.6rem; border-top: 1px solid #e0ddd4;
+      display: flex; gap: .7rem; justify-content: flex-end;
+    }
+    .btn-secondary {
+      padding: .55rem 1.2rem;
+      border: 1.5px solid #ddd9cf; border-radius: 9px;
+      background: var(--paper); color: #6b6a61;
+      font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 500;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-secondary:hover { border-color: var(--indigo); color: var(--indigo); }
+    .btn-primary-sm {
+      padding: .55rem 1.4rem;
+      border: none; border-radius: 9px;
+      background: var(--navy); color: #fff;
+      font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .btn-primary-sm:hover { background: var(--indigo); }
+
+    /* ──────── LAYOUT ──────── */
+    .form-grid {
+      display: grid; grid-template-columns: 1fr;
+      gap: 1.1rem;
+    }
+    @media (min-width: 640px) {
+      .form-grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+    .section-spacer { height: 1rem; border-top: 1px dashed #e0ddd4; padding-top: 1rem; }
+
+    /* ──────── FOOTER ──────── */
+    footer {
+      text-align: center; padding: 2.5rem 1rem;
+      font-size: .8rem; color: #9e9d93;
+    }
+    footer strong { color: var(--navy); }
+
+    /* ──────── FADE IN ──────── */
+    .fade-in {
+      animation: fadeIn .5s ease forwards;
+      opacity: 0;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(10px); }
+    }
+    .fade-in:nth-child(1) { animation-delay: .05s; }
+    .fade-in:nth-child(2) { animation-delay: .12s; }
+    .fade-in:nth-child(3) { animation-delay: .19s; }
+    .fade-in:nth-child(4) { animation-delay: .26s; }
+    .fade-in:nth-child(5) { animation-delay: .33s; }
+
+    /* ──────── HIDDEN ──────── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<main>
+
+  <!-- ══════════ HERO ══════════ -->
+  <div class="hero">
+    <div class="hero-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#c9a84c"/></svg>
+      Powered by Llama 4 Scout · IA Académica
+    </div>
+    <h1>Academic<br><span>Report Pro</span></h1>
+    <p>Genera informes académicos profesionales con inteligencia artificial en segundos.</p>
+  </div>
+
+  <!-- ══════════ MAIN FORM ══════════ -->
+  <div style="max-width: 820px; margin: 0 auto; padding: 2rem 1rem 4rem;">
+
+    <!-- Formulario principal -->
+    <form id="reportForm" onsubmit="return false;">
+
+      <!-- ─── FILA 1: Modo + Tipo ─── -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin-bottom: 1.1rem;" class="fade-in">
+
+        <!-- Modo de generación -->
+        <div class="card">
+          <div class="card-title">Modo de generación</div>
+          <div class="tabs" id="modoTabs">
+            <button type="button" class="tab-btn active" data-modo="rapido" onclick="setModo('rapido')">⚡ Rápido</button>
+            <button type="button" class="tab-btn" data-modo="automatico" onclick="setModo('automatico')">🔄 Auto</button>
+            <button type="button" class="tab-btn" data-modo="manual" onclick="setModo('manual')">✏️ Manual</button>
+          </div>
+          <p id="modoDesc" style="font-size:.78rem; color:#8a8979; margin-top:.7rem; line-height:1.5;">
+            Solo escribe el tema y la IA genera todo el informe automáticamente.
+          </p>
+        </div>
+
+        <!-- Tipo de informe -->
+        <div class="card">
+          <div class="card-title">Tipo de informe</div>
+          <div class="tipo-grid" id="tipoGrid">
+            <div class="tipo-card selected" data-tipo="academico" onclick="setTipo('academico')">
+              <div class="tipo-icon">📄</div>
+              <div class="tipo-name">Académico</div>
+              <div class="tipo-desc">General universitario</div>
+            </div>
+            <div class="tipo-card" data-tipo="laboratorio" onclick="setTipo('laboratorio')">
+              <div class="tipo-icon">🔬</div>
+              <div class="tipo-name">Laboratorio</div>
+              <div class="tipo-desc">Con tabla de resultados</div>
+            </div>
+            <div class="tipo-card" data-tipo="ejecutivo" onclick="setTipo('ejecutivo')">
+              <div class="tipo-icon">💼</div>
+              <div class="tipo-name">Ejecutivo</div>
+              <div class="tipo-desc">Empresarial/gerencial</div>
+            </div>
+            <div class="tipo-card" data-tipo="tesis" onclick="setTipo('tesis')">
+              <div class="tipo-icon">🎓</div>
+              <div class="tipo-name">Tesis</div>
+              <div class="tipo-desc">Trabajo de grado</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── FILA 2: Tema + Datos básicos ─── -->
+      <div class="card fade-in" style="margin-bottom: 1.1rem;">
+        <div class="card-title">Datos del informe</div>
+        <div class="form-grid">
+          <div>
+            <label>Tema / Título del informe *</label>
+            <input type="text" id="tema" placeholder="Ej: Impacto de la inteligencia artificial en la educación superior" required />
+          </div>
+        </div>
+
+        <!-- Textarea para modo automático/manual -->
+        <div id="textoUsuarioWrap" class="hidden" style="margin-top:.9rem;">
+          <label id="textoLabel">Tu texto o contenido a organizar</label>
+          <textarea id="textoUsuario" placeholder="Pega aquí tu texto, notas, apuntes o contenido que quieres organizar en el informe..."></textarea>
+        </div>
+
+        <div class="form-grid form-grid-2 fade-in" style="margin-top:.9rem;">
+          <div>
+            <label>Asignatura / Materia</label>
+            <input type="text" id="asignatura" placeholder="Ej: Biología Molecular" />
+          </div>
+          <div>
+            <label>Nombre del docente</label>
+            <input type="text" id="profesor" placeholder="Ej: Dr. Carlos Ramírez" />
+          </div>
+          <div>
+            <label>Institución educativa</label>
+            <input type="text" id="institucion" placeholder="Ej: Universidad Nacional de Colombia" />
+          </div>
+          <div>
+            <label>Ciudad</label>
+            <input type="text" id="ciudad" placeholder="Ej: Bogotá, Colombia" />
+          </div>
+          <div>
+            <label>Fecha del informe</label>
+            <input type="date" id="fecha" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── FILA 3: Norma ─── -->
+      <div class="card fade-in" style="margin-bottom: 1.1rem;">
+        <div class="card-title">Norma de citación</div>
+        <div class="chip-group" id="normaChips">
+          <div class="chip selected" data-norma="APA 7" onclick="setNorma('APA 7', this)">APA 7</div>
+          <div class="chip" data-norma="APA 6" onclick="setNorma('APA 6', this)">APA 6</div>
+          <div class="chip" data-norma="ICONTEC" onclick="setNorma('ICONTEC', this)">ICONTEC</div>
+          <div class="chip" data-norma="Vancouver" onclick="setNorma('Vancouver', this)">Vancouver</div>
+          <div class="chip" data-norma="Chicago" onclick="setNorma('Chicago', this)">Chicago</div>
+          <div class="chip" data-norma="Harvard" onclick="setNorma('Harvard', this)">Harvard</div>
+          <div class="chip" data-norma="MLA" onclick="setNorma('MLA', this)">MLA</div>
+          <div class="chip" data-norma="IEEE" onclick="setNorma('IEEE', this)">IEEE</div>
+        </div>
+      </div>
+
+      <!-- ─── FILA 4: Autores ─── -->
+      <div class="card fade-in" style="margin-bottom: 1.1rem;">
+        <div class="card-title">Autores del informe</div>
+        <div id="autoresContainer">
+          <div class="autor-row" id="autor_0">
+            <div>
+              <label>Nombre completo *</label>
+              <input type="text" class="autor-nombre" placeholder="Nombre y apellidos" required />
+            </div>
+            <div>
+              <label>Código / Cargo</label>
+              <input type="text" class="autor-cargo" placeholder="Código estudiantil o cargo" />
+            </div>
+            <div><!-- espacio para alineación --></div>
+          </div>
+        </div>
+        <button type="button" class="btn-add" onclick="agregarAutor()">
+          <span>+</span> Agregar autor
+        </button>
+      </div>
+
+      <!-- ─── FILA 5: Referencias ─── -->
+      <div class="card fade-in" style="margin-bottom: 1.6rem;">
+        <div class="card-title">Referencias bibliográficas</div>
+        <div class="refs-tabs" id="refsTabs">
+          <div class="ref-tab active" data-ref="automatico" onclick="setRefs('automatico', this)">🤖 Automático (IA)</div>
+          <div class="ref-tab" data-ref="manual" onclick="setRefs('manual', this)">✍️ Manual</div>
+          <div class="ref-tab" data-ref="mixto" onclick="setRefs('mixto', this)">⚡ Mixto</div>
+        </div>
+        <div id="refsAutoDesc" style="font-size:.8rem; color:#8a8979; line-height:1.5;">
+          La IA generará referencias académicas relevantes en el formato de norma seleccionado.
+        </div>
+        <div id="refsManualWrap" class="hidden">
+          <label>Tus referencias (una por línea)</label>
+          <textarea id="referenciasManual" placeholder="Ej: Pérez, J. (2021). Título del libro. Editorial.&#10;García, M. (2020). Artículo académico. Revista X, 12(3), 45-58."></textarea>
+        </div>
+        <div id="refsMixtoWrap" class="hidden" style="margin-top:.5rem;">
+          <label>Tus referencias adicionales</label>
+          <textarea id="referenciasMixto" placeholder="Agrega referencias propias; la IA complementará con más..."></textarea>
+        </div>
+      </div>
+
+      <!-- ─── BOTONES ─── -->
+      <div style="display: flex; flex-direction: column; gap: .7rem;" class="fade-in">
+        <button type="button" class="btn-generate" id="btnPreview" onclick="previsualizarContenido()">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="#fff" stroke-width="2"/></svg>
+          Previsualizar contenido IA
+        </button>
+        <button type="button" class="btn-generate" id="btnGenerar" style="background: linear-gradient(135deg, #b8860b 0%, #c9a84c 100%); box-shadow: 0 4px 20px rgba(201,168,76,.4);" onclick="generarInforme()">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Generar y Descargar PDF
+        </button>
+      </div>
+    </form>
+
+    <!-- ══════════ PROGRESS ══════════ -->
+    <div id="progressSection" style="margin-top: 1.1rem;">
+      <div class="spinner"></div>
+      <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--navy); margin-bottom:.4rem;" id="progressTitle">
+        Generando tu informe…
+      </h3>
+      <p style="font-size:.85rem; color:#8a8979;" id="progressSub">Esto puede tomar 30-60 segundos.</p>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      <ul class="step-list" id="stepList">
+        <li data-step="0"><span class="dot"></span> Procesando solicitud</li>
+        <li data-step="1"><span class="dot"></span> Conectando con IA (Llama 4 Scout)</li>
+        <li data-step="2"><span class="dot"></span> Generando contenido académico</li>
+        <li data-step="3"><span class="dot"></span> Estructurando secciones del informe</li>
+        <li data-step="4"><span class="dot"></span> Construyendo PDF profesional</li>
+        <li data-step="5"><span class="dot"></span> Preparando descarga</li>
+      </ul>
+    </div>
+
+  </div><!-- /max-width -->
+</main>
+
+<!-- ══════════ PREVIEW MODAL ══════════ -->
+<div id="previewModal" onclick="closePreview(event)">
+  <div class="preview-box">
+    <div class="preview-header">
+      <h3>👁 Previsualización del contenido IA</h3>
+      <button class="preview-close" onclick="document.getElementById('previewModal').style.display='none'">✕</button>
+    </div>
+    <div class="preview-body" id="previewBody">Cargando…</div>
+    <div class="preview-footer">
+      <button class="btn-secondary" onclick="document.getElementById('previewModal').style.display='none'">Cerrar</button>
+      <button class="btn-primary-sm" onclick="generarDesdePreview()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="#fff" stroke-width="2"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2"/></svg>
+        Generar PDF con este contenido
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TOAST ══════════ -->
+<div id="toast"></div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <strong>Academic Report Pro</strong> · Generador de informes académicos con IA<br>
+  Potenciado por Llama 4 Scout vía OpenRouter · 8 normas · 4 tipos de informe
+</footer>
+
+<script>
+  // ════════════════════════════════════════════
+  //  STATE
+  // ════════════════════════════════════════════
+  let modo     = 'rapido';
+  let tipo     = 'academico';
+  let norma    = 'APA 7';
+  let refsMode = 'automatico';
+  let autorCount = 1;
+  let previewContenido = null;
+
+  const MODO_DESC = {
+    rapido:    'Solo escribe el tema y la IA genera todo el informe automáticamente.',
+    automatico:'Pega tu texto o apuntes y la IA los organiza en un informe profesional.',
+    manual:    'Escribe el contenido de cada sección manualmente; la IA lo formatea.',
+  };
+
+  // ════════════════════════════════════════════
+  //  INIT
+  // ════════════════════════════════════════════
+  (function init() {
+    // Fecha actual
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth()+1).padStart(2,'0');
+    const dd = String(hoy.getDate()).padStart(2,'0');
+    document.getElementById('fecha').value = `${yyyy}-${mm}-${dd}`;
+  })();
+
+  // ════════════════════════════════════════════
+  //  MODO
+  // ════════════════════════════════════════════
+  function setModo(m) {
+    modo = m;
+    document.querySelectorAll('#modoTabs .tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.modo === m);
+    });
+    document.getElementById('modoDesc').textContent = MODO_DESC[m];
+    const wrap = document.getElementById('textoUsuarioWrap');
+    const lbl  = document.getElementById('textoLabel');
+    if (m === 'automatico') {
+      wrap.classList.remove('hidden');
+      lbl.textContent = 'Tu texto o contenido a organizar';
+    } else if (m === 'manual') {
+      wrap.classList.remove('hidden');
+      lbl.textContent = 'Escribe el contenido del informe (sección por sección)';
+    } else {
+      wrap.classList.add('hidden');
+    }
+  }
+
+  // ════════════════════════════════════════════
+  //  TIPO
+  // ════════════════════════════════════════════
+  function setTipo(t) {
+    tipo = t;
+    document.querySelectorAll('#tipoGrid .tipo-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.tipo === t);
+    });
+  }
+
+  // ════════════════════════════════════════════
+  //  NORMA
+  // ════════════════════════════════════════════
+  function setNorma(n, el) {
+    norma = n;
+    document.querySelectorAll('#normaChips .chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // ════════════════════════════════════════════
+  //  REFERENCIAS
+  // ════════════════════════════════════════════
+  function setRefs(r, el) {
+    refsMode = r;
+    document.querySelectorAll('#refsTabs .ref-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('refsAutoDesc').classList.toggle('hidden', r !== 'automatico');
+    document.getElementById('refsManualWrap').classList.toggle('hidden', r !== 'manual');
+    document.getElementById('refsMixtoWrap').classList.toggle('hidden', r !== 'mixto');
+  }
+
+  // ════════════════════════════════════════════
+  //  AUTORES
+  // ════════════════════════════════════════════
+  function agregarAutor() {
+    const idx = autorCount++;
+    const div = document.createElement('div');
+    div.className = 'autor-row';
+    div.id = `autor_${idx}`;
+    div.innerHTML = `
+      <div>
+        <label>Nombre completo</label>
+        <input type="text" class="autor-nombre" placeholder="Nombre y apellidos" />
+      </div>
+      <div>
+        <label>Código / Cargo</label>
+        <input type="text" class="autor-cargo" placeholder="Código estudiantil o cargo" />
+      </div>
+      <button type="button" class="btn-remove" onclick="eliminarAutor('autor_${idx}')" title="Eliminar">✕</button>
+    `;
+    document.getElementById('autoresContainer').appendChild(div);
+  }
+
+  function eliminarAutor(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function getAutores() {
+    const rows = document.querySelectorAll('#autoresContainer .autor-row');
+    const autores = [];
+    rows.forEach(row => {
+      const nombre = row.querySelector('.autor-nombre')?.value.trim();
+      const cargo  = row.querySelector('.autor-cargo')?.value.trim();
+      if (nombre) autores.push({ nombre, cargo: cargo || '' });
+    });
+    return autores;
+  }
+
+  // ════════════════════════════════════════════
+  //  RECOLECTAR DATOS FORMULARIO
+  // ════════════════════════════════════════════
+  function getDatos() {
+    const tema = document.getElementById('tema').value.trim();
+    if (!tema) { showToast('⚠️ El tema del informe es requerido.', 'error'); return null; }
+
+    const autores = getAutores();
+    if (!autores.length) { showToast('⚠️ Agrega al menos un autor.', 'error'); return null; }
+
+    // Formatear fecha para mostrar en PDF
+    const fechaVal = document.getElementById('fecha').value;
+    let fechaMostrar = new Date().toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
+    if (fechaVal) {
+      const [y, m, d] = fechaVal.split('-');
+      fechaMostrar = new Date(+y, +m-1, +d).toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
+    }
+
+    const refsManuales = refsMode === 'manual'
+      ? document.getElementById('referenciasManual').value.trim()
+      : refsMode === 'mixto'
+        ? document.getElementById('referenciasMixto').value.trim()
+        : '';
+
+    return {
+      tema,
+      modo,
+      tipo_informe: tipo,
+      norma,
+      autores,
+      asignatura:           document.getElementById('asignatura').value.trim(),
+      profesor:             document.getElementById('profesor').value.trim(),
+      institucion:          document.getElementById('institucion').value.trim(),
+      ciudad:               document.getElementById('ciudad').value.trim(),
+      fecha:                fechaMostrar,
+      texto_usuario:        document.getElementById('textoUsuario')?.value.trim() || '',
+      referencias_modo:     refsMode,
+      referencias_manuales: refsManuales,
+    };
+  }
+
+  // ════════════════════════════════════════════
+  //  PROGRESS SIMULATION
+  // ════════════════════════════════════════════
+  let progressInterval = null;
+  let currentStep = 0;
+
+  function startProgress(titulo) {
+    document.getElementById('progressSection').style.display = 'block';
+    document.getElementById('progressTitle').textContent = titulo || 'Generando tu informe…';
+    document.getElementById('reportForm').style.display = 'none';
+    currentStep = 0;
+
+    const steps = document.querySelectorAll('#stepList li');
+    steps.forEach(s => { s.classList.remove('done','active'); });
+
+    const durations = [800, 2000, 8000, 5000, 4000, 1000];
+    let total = durations.reduce((a,b) => a+b, 0);
+    let elapsed = 0;
+
+    steps[0].classList.add('active');
+    document.getElementById('progressBar').style.width = '3%';
+
+    let si = 0;
+    progressInterval = setInterval(() => {
+      if (si >= steps.length) { clearInterval(progressInterval); return; }
+      steps[si].classList.remove('active');
+      steps[si].classList.add('done');
+      si++;
+      if (si < steps.length) steps[si].classList.add('active');
+      elapsed += durations[si-1] || 1000;
+      const pct = Math.min(95, Math.round(elapsed / total * 100));
+      document.getElementById('progressBar').style.width = pct + '%';
+    }, durations[si] || 2000);
+
+    // Iterate through steps
+    let delay = 0;
+    for (let i = 0; i < durations.length; i++) {
+      delay += durations[i];
+      ((idx, d) => setTimeout(() => {
+        steps.forEach((s, j) => {
+          s.classList.remove('active');
+          if (j < idx) s.classList.add('done');
+          else if (j === idx) s.classList.add('active');
+        });
+        const pct = Math.min(95, Math.round(d / total * 100));
+        document.getElementById('progressBar').style.width = pct + '%';
+      }, delay))(i+1, delay);
+    }
+  }
+
+  function stopProgress(ok) {
+    clearInterval(progressInterval);
+    document.getElementById('progressBar').style.width = '100%';
+    document.querySelectorAll('#stepList li').forEach(s => {
+      s.classList.remove('active'); s.classList.add('done');
+    });
+    setTimeout(() => {
+      document.getElementById('progressSection').style.display = 'none';
+      document.getElementById('reportForm').style.display = 'block';
+    }, 800);
+  }
+
+  // ════════════════════════════════════════════
+  //  PREVIEW
+  // ════════════════════════════════════════════
+  async function previsualizarContenido() {
+    const datos = getDatos();
+    if (!datos) return;
+
+    document.getElementById('previewBody').textContent = '⏳ Generando contenido con IA…';
+    document.getElementById('previewModal').style.display = 'flex';
+
+    try {
+      const res = await fetch('/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      });
+      const json = await res.json();
+      if (json.error) {
+        document.getElementById('previewBody').textContent = '❌ Error: ' + json.error;
+      } else {
+        previewContenido = json.contenido;
+        document.getElementById('previewBody').textContent = json.contenido;
+      }
+    } catch (err) {
+      document.getElementById('previewBody').textContent = '❌ Error de conexión: ' + err.message;
+    }
+  }
+
+  function closePreview(e) {
+    if (e.target === document.getElementById('previewModal')) {
+      document.getElementById('previewModal').style.display = 'none';
+    }
+  }
+
+  function generarDesdePreview() {
+    document.getElementById('previewModal').style.display = 'none';
+    generarInforme();
+  }
+
+  // ════════════════════════════════════════════
+  //  GENERAR PDF
+  // ════════════════════════════════════════════
+  async function generarInforme() {
+    const datos = getDatos();
+    if (!datos) return;
+
+    startProgress('Generando informe académico…');
+
+    try {
+      const res = await fetch('/generar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      });
+
+      if (!res.ok) {
+        let msg = 'Error al generar el informe';
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        stopProgress(false);
+        showToast('❌ ' + msg, 'error');
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+
+      const tema = datos.tema.slice(0, 40).replace(/\s+/g,'_').replace(/[^\w_-]/g,'');
+      a.download = `informe_${tema}_${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      stopProgress(true);
+      showToast('✅ ¡Informe generado y descargado exitosamente!', 'success');
+
+    } catch (err) {
+      stopProgress(false);
+      showToast('❌ Error de conexión: ' + err.message, 'error');
+    }
+  }
+
+  // ════════════════════════════════════════════
+  //  TOAST
+  // ════════════════════════════════════════════
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = '';
+    t.classList.add(type);
+    t.style.display = 'flex';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.style.display = 'none'; }, 5000);
+  }
+</script>
+</body>
+</html>
