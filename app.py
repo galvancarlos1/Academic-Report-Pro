@@ -21,7 +21,7 @@ from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate
 
 app = Flask(__name__)
 
-OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
+OPENROUTER_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ def llamar_openrouter(prompt, max_tokens=6000):
         "X-Title": "Academic Report Pro"
     }
     data = {
-        "model": "meta-llama/llama-4-scout",
+        "model": "deepseek/deepseek-chat",
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": max_tokens,
         "temperature": 0.7
